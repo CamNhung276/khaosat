@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Hệ Thống Tình Báo</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Consolas,monospace;
+background:#021d1a;
+color:#00ffb3;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+overflow:hidden;
+}
+
+/* RADAR */
+
+.radar{
+position:absolute;
+width:650px;
+height:650px;
+border-radius:50%;
+border:2px solid #00ffb344;
+}
+
+.scan{
+position:absolute;
+width:650px;
+height:650px;
+border-radius:50%;
+background:conic-gradient(#00ffb355,transparent 40%);
+animation:quay 4s linear infinite;
+}
+
+@keyframes quay{
+from{transform:rotate(0)}
+to{transform:rotate(360deg)}
+}
+
+/* CHẤM RADAR */
+
+.dot{
+position:absolute;
+width:8px;
+height:8px;
+background:#00ffb3;
+border-radius:50%;
+box-shadow:0 0 10px #00ffb3;
+}
+
+/* BẢNG ĐIỀU KHIỂN */
+
+.panel{
+position:relative;
+z-index:10;
+width:420px;
+padding:35px;
+background:#012a26dd;
+border:2px solid #00ffb3;
+border-radius:10px;
+text-align:center;
+box-shadow:0 0 40px #00ffb333;
+}
+
+/* THANH TIẾN TRÌNH */
+
+.progress{
+height:8px;
+background:#033;
+border-radius:10px;
+margin-bottom:20px;
+overflow:hidden;
+}
+
+.bar{
+height:8px;
+background:#00ffb3;
+transition:0.5s;
+}
+
+/* NÚT */
+
+button{
+background:#00ffb3;
+border:none;
+padding:12px 25px;
+margin:10px;
+border-radius:6px;
+cursor:pointer;
+font-size:15px;
+}
+
+button:hover{
+background:#00cc8f;
+}
+
+/* Ô NHẬP */
+
+input{
+padding:10px;
+border:none;
+border-radius:5px;
+width:80%;
+}
+
+/* MÁY BAY */
+
+.jet{
+position:absolute;
+font-size:30px;
+animation:bay linear infinite;
+}
+
+@keyframes bay{
+0%{transform:translateX(-10vw)}
+100%{transform:translateX(110vw)}
+}
+
+/* KHÓI */
+
+.smoke{
+position:absolute;
+font-size:12px;
+opacity:0.5;
+animation:khoi 3s linear forwards;
+}
+
+@keyframes khoi{
+0%{transform:translateY(0)}
+100%{transform:translateY(-60px);opacity:0}
+}
+
+/* NÚT KHÔNG CHẠY */
+
+#no{
+position:absolute;
+background:#ff4444;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="radar"></div>
+<div class="scan"></div>
+
+<div class="panel" id="panel">
+
+<h2>🛰 HỆ THỐNG THU THẬP TIN TỨC</h2>
+<p>Đã sẵn sàng</p>
+
+<button onclick="start()">Bắt đầu</button>
+
+</div>
+
+<script>
+
+let index=0
+let diem=0
+let answers=[]
+
+let questions=[
+
+{q:"Thông tin 1: Món ăn anh Quân thích nhất?",type:"text"},
+
+{q:"Thông tin 2: Anh Quân thích ăn ngọt hay mặn?",type:"choice",options:["Ăn mặn","Ăn ngọt"]},
+
+{q:"Thông tin 3: Có món nào anh Quân ghét ăn?",type:"text"},
+
+{q:"Thông tin 4: Anh Quân thích nhận quà kiểu nào?",type:"choice",options:["Dễ thương","Hữu ích","Handmade","Bất ngờ"]},
+
+{q:"Thông tin 5: Size giày anh Quân?",type:"text"},
+
+{q:"Thông tin 6: Ngoài màu đen còn thích màu nào?",type:"text"},
+
+{q:"Thông tin 7: Có thích đeo trang sức?",type:"choice",options:["Có","Không"]},
+
+{q:"Thông tin 8: Dùng dầu gội / sữa tắm gì?",type:"text"},
+
+{q:"Thông tin 9: Có yêu cầu gì về bạn gái?",type:"text"},
+
+{q:"Thông tin 10: Có muốn bạn gái chia sẻ chuyện hằng ngày?",type:"choice",options:["Có","Không"]},
+
+{q:"Thông tin 11: Khi giận thì muốn?",type:"choice",options:["Ở một mình","Được dỗ"]},
+
+{q:"Thông tin 12: Có muốn rủ người tạo khảo sát đi ăn không?",type:"choice",options:["Có","Không"]}
+
+]
+
+function start(){
+show()
+}
+
+function show(){
+
+let q=questions[index]
+
+let html=`
+
+<div class="progress">
+<div class="bar" style="width:${(index/questions.length)*100}%"></div>
+</div>
+
+<h3>Nhiệm vụ ${index+1}</h3>
+
+<p>${q.q}</p>
+
+`
+
+if(q.type=="text"){
+
+html+=`
+<input id="traloi" type="text">
+<br>
+<button onclick="saveText()">Gửi</button>
+`
+
+}
+
+if(q.type=="choice"){
+
+q.options.forEach(o=>{
+
+if((index==9 || index==11) && o=="Không"){
+
+html+=`<button id="no" onmouseover="run()">Không</button>`
+
+}else{
+
+html+=`<button onclick="saveChoice('${o}')">${o}</button>`
+
+}
+
+})
+
+}
+
+document.getElementById("panel").innerHTML=html
+
+}
+
+function saveText(){
+
+let value=document.getElementById("traloi").value
+
+answers.push(value)
+
+next()
+
+}
+
+function saveChoice(v){
+
+answers.push(v)
+
+next()
+
+}
+
+function next(){
+
+diem+=10
+index++
+
+if(index<questions.length){
+show()
+}else{
+finish()
+}
+
+}
+
+function finish(){
+
+let text="KẾT QUẢ KHẢO SÁT\n\n"
+
+questions.forEach((q,i)=>{
+text+=(i+1)+". "+answers[i]+"\n"
+})
+
+let blob=new Blob([text],{type:"text/plain"})
+
+let a=document.createElement("a")
+
+a.href=URL.createObjectURL(blob)
+
+a.download="ket_qua_khao_sat.txt"
+
+a.click()
+
+document.getElementById("panel").innerHTML=`
+
+<h2>🎖 NHIỆM VỤ HOÀN THÀNH</h2>
+
+<p>Điểm thu thập: ${diem}</p>
+
+<p> Cảm ơn đã hoàn thành khảo sát.</p>
+
+`
+
+}
+
+function run(){
+
+let btn=document.getElementById("no")
+
+btn.style.left=Math.random()*300+"px"
+btn.style.top=Math.random()*200+"px"
+
+}
+
+/* MÁY BAY BAY */
+
+setInterval(()=>{
+
+let jet=document.createElement("div")
+
+jet.className="jet"
+
+jet.innerHTML="✈"
+
+jet.style.top=Math.random()*80+"%"
+
+jet.style.animationDuration=(6+Math.random()*4)+"s"
+
+document.body.appendChild(jet)
+
+setTimeout(()=>jet.remove(),9000)
+
+},5000)
+
+/* CHẤM RADAR */
+
+setInterval(()=>{
+
+let dot=document.createElement("div")
+
+dot.className="dot"
+
+dot.style.left=Math.random()*100+"%"
+
+dot.style.top=Math.random()*100+"%"
+
+document.body.appendChild(dot)
+
+setTimeout(()=>dot.remove(),2000)
+
+},1200)
+
+/* KHÓI */
+
+setInterval(()=>{
+
+let s=document.createElement("div")
+
+s.className="smoke"
+
+s.innerHTML="💨"
+
+s.style.left=Math.random()*100+"%"
+
+s.style.top=Math.random()*80+"%"
+
+document.body.appendChild(s)
+
+setTimeout(()=>s.remove(),3000)
+
+},800)
+
+</script>
+
+</body>
+</html>
